@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const usuariosSchema = new mongoose.Schema({
 
-    NombreUsuario:{
+    nombreUsuario:{
         type: String,
         required: true,
         unique: true,

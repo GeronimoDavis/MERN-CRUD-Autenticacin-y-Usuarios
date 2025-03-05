@@ -1,11 +1,12 @@
 const Usuario = require("../modelos/Usuario");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcyptsjs");
+const bcrypt = require("bcryptjs");
+
 
 const registrarUsuario = async (req, res) => {
 
     try{
-        const{nombre, email, password} = req.body;
+        const{nombreUsuario, email, password} = req.body;
 
         //verificar si el usuario ya existe
         const existeUsuario = await Usuario.findOne({ email });
@@ -19,7 +20,7 @@ const registrarUsuario = async (req, res) => {
 
         //Crear el nuevo usuario
         const nuevoUsuario = new Usuario({
-            nombre,
+            nombreUsuario,
             email,
             password: passwordEncriptado
         });

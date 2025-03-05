@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const authRoutes = require("./rutas/authRoutes");
 
 const app = express();
 
@@ -16,9 +17,7 @@ mongoose.connect(process.env.MONGO_CONNECTION)
 .catch((err) => console.error("Error al conectar a MongoDB" ,err));
 
 // Rutas
-app.get("/", (req, res) => {
-    res.send("Hola Mundo");
-});
+app.use("/api/auth", authRoutes);
 
 //levantar el servidor
 
