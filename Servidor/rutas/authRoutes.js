@@ -1,11 +1,16 @@
 const express = require('express');
 const {registrarUsuario, login} = require('../controladores/authController');
-
+const {authMiddleware} = require('../middlewares/authMiddleware');
 const router = express.Router();
 
-//Ruta para registrar un usuario
+//Rutas
 router.post("/register", registrarUsuario);
 router.post("/login", login);
+
+//Rutas protegidas (perfil de usuario)
+router.get("/perfil",authMiddleware, (req, res) => {
+    res.json({msg: "Perfil de usuario", usuario: req.usuario});
+});
 
 
 module.exports = router;
