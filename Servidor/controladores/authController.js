@@ -44,4 +44,35 @@ const registrarUsuario = async (req, res) => {
 
 };
 
-module.exports = {registrarUsuario};
+const login = async (req, res) => {
+    try{
+        const {email, password} = req.body;
+
+        //Verificar si el usuario existe
+        const usuarioExiste = await Usuario.findOne({email});
+        if(!usuarioExiste){
+            return res.status(400).json({msg:"Credenciales incorrectas"});
+        }
+
+        //Verificar si la contraseña es correcta
+        const passwordValido = await bcrypt.compare(password, usuarioExiste.password);
+        if(!passwordValido){
+            return res.status(400).json({msg:"Credenciales incorrectas"});
+        }
+
+        //Crear el JWT
+        const token = jwt.sign(
+            {usuarioId: usuarioExiste._id},
+            process.env.JWT_SECRET,
+            {expiresIn: "1h"}
+        )
+
+        res.status(200).json({msg: "Inicio de sesión exitoso", token});
+
+    }catch(error){
+        res.status(500).json({msg: "Hubo un error en el servidor", error});
+
+    }
+}
+
+module.exports = {registrarUsuario, login};
