@@ -18,6 +18,10 @@ const authMiddleware = (req, res, next) => {
 
         next();
     }catch(error){
+        if(error.name === "TokenExpiredError"){
+            return res.status(401).json({msg: "Token expirado, por favor inicia sesión nuevamente"});
+        }
+
         res.status(401).json({msg: "Token no valido"});
     }
 }
