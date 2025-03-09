@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const RevokedToken = require("..modelos/RevokedToken");
+const RevokedToken = require("../modelos/RevokedToken");
 
 const authMiddleware = async (req, res, next) => {
     const token = req.header("Authorization");
