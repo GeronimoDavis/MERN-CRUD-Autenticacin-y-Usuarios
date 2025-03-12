@@ -27,22 +27,19 @@ const registrarUsuario = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const passwordEncriptado = await bcrypt.hash(password, salt);
 
+        //Crear el JWT
+        const tokenAcceso = generarTokenAcceso(nuevoUsuario._id);
+        const refreshToken = generarTokenRefresh(nuevoUsuario._id);
+
         //Crear el nuevo usuario
         const nuevoUsuario = new Usuario({
             nombreUsuario,
             email,
-            password: passwordEncriptado
+            password: passwordEncriptado,
+            refreshToken
         });
 
-        await nuevoUsuario.save();
 
-        //Crear el JWT 
-        const tokenAcceso = generarTokenAcceso(nuevoUsuario._id);
-        const refreshToken = generarTokenRefresh(nuevoUsuario._id);
-
-        //Guardar el refresh token en la base de datos
-        nuevoUsuario.refreshToken = refreshToken;
-        await nuevoUsuario.save();
 
         res.status(201).json({msg: "Usuario creado correctamente", tokenAcceso, refreshToken});
 

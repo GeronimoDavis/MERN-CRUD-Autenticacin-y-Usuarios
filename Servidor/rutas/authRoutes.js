@@ -2,7 +2,7 @@ const express = require('express');
 const {registrarUsuario, login, refreshTokenFuncion, logout} = require('../controladores/authController');
 const {authMiddleware} = require('../middlewares/authMiddleware');
 const router = express.Router();
-const RevokedToken = require("../modelos/RevokedToken");
+
 
 //Rutas
 router.post("/register", registrarUsuario);
