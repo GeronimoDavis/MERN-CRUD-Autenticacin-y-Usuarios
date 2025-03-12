@@ -17,6 +17,10 @@ const registrarUsuario = async (req, res) => {
     try{
         const{nombreUsuario, email, password} = req.body;
 
+        if (!nombreUsuario || !email || !password) {
+            return res.status(400).json({ msg: "Todos los campos son obligatorios" });
+        }
+
         //verificar si el usuario ya existe
         const existeUsuario = await Usuario.findOne({ email });
         if(existeUsuario){
@@ -27,25 +31,28 @@ const registrarUsuario = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const passwordEncriptado = await bcrypt.hash(password, salt);
 
-        //Crear el JWT
-        const tokenAcceso = generarTokenAcceso(nuevoUsuario._id);
-        const refreshToken = generarTokenRefresh(nuevoUsuario._id);
-
         //Crear el nuevo usuario
         const nuevoUsuario = new Usuario({
             nombreUsuario,
             email,
-            password: passwordEncriptado,
-            refreshToken
+            password: passwordEncriptado
         });
 
+        await nuevoUsuario.save();
 
+        //Crear el JWT
+        const tokenAcceso = generarTokenAcceso(nuevoUsuario._id);
+        const refreshToken = generarTokenRefresh(nuevoUsuario._id);
+
+        nuevoUsuario.refreshToken = refreshToken;
+        await nuevoUsuario.save();
 
         res.status(201).json({msg: "Usuario creado correctamente", tokenAcceso, refreshToken});
 
 
 
     }catch(error){
+        console.error("Error en el servidor:", error);
         res.status(500).json({msg: "Hubo un error en el servidor", error});
     }
 
@@ -106,6 +113,8 @@ const refreshTokenFuncion = async (req, res) => {
 
             //Crear nuevo token de acceso
             const newtokenAcceso = generarTokenAcceso(usuario._id);
+
+
             res.status(200).json({newtokenAcceso});
         });
     }catch(error){
@@ -117,13 +126,17 @@ const refreshTokenFuncion = async (req, res) => {
 
 const logout = async (req, res) => {
     try{
-        const usuario = await Usuario.findById(req.usuario.usuarioId);
+        const {refreshToken} = req.body;
+        if(!refreshToken){
+            return res.status(401).json({msg: "No hay token, acceso no válido"});
+        }
+
+        const usuario = await Usuario.findOne({refreshToken});
         if(!usuario){
             return res.status(401).json({msg: "Usuario no encontrado"});
         }
 
-        usuario.refreshToken = null;
-        await usuario.save();
+        await Usuario.updateOne({refreshToken}, {$unset: {refreshToken: ""}});
 
         res.status(200).json({msg: "Sesión cerrada correctamente"});
     }catch(error){
