@@ -2,6 +2,15 @@ const Usuario = require("../modelos/Usuario");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
+//Funcion para geenerar tokens de acceso
+const generarTokenAcceso = (usuarioId) => {
+    return jwt.sign({usuarioId}, process.env.JWT_SECRET, {expiresIn: "1h"});
+};
+
+//Funcion para generar Refresh token 
+const generarTokenRefresh = (usuarioId) => {
+    return jwt.sign({usuarioId}, process.env.JWT_SECRET_REFRESH, {expiresIn: "7d"});
+}
 
 const registrarUsuario = async (req, res) => {
 
@@ -27,14 +36,15 @@ const registrarUsuario = async (req, res) => {
 
         await nuevoUsuario.save();
 
-        //Crear el JWT
-        const token = jwt.sign(
-            {usuarioId: nuevoUsuario._id},
-            process.env.JWT_SECRET,
-            {expiresIn: "1h"}
-        )
+        //Crear el JWT 
+        const tokenAcceso = generarTokenAcceso(nuevoUsuario._id);
+        const refreshToken = generarTokenRefresh(nuevoUsuario._id);
 
-        res.status(201).json({msg: "Usuario creado correctamente", token});
+        //Guardar el refresh token en la base de datos
+        nuevoUsuario.refreshToken = refreshToken;
+        await nuevoUsuario.save();
+
+        res.status(201).json({msg: "Usuario creado correctamente", tokenAcceso, refreshToken});
 
 
 
@@ -61,13 +71,14 @@ const login = async (req, res) => {
         }
 
         //Crear el JWT
-        const token = jwt.sign(
-            {usuarioId: usuarioExiste._id},
-            process.env.JWT_SECRET,
-            {expiresIn: "1h"}
-        )
+        const tokenAcceso = generarTokenAcceso(usuarioExiste._id);
+        const refreshToken = generarTokenRefresh(usuarioExiste._id);
 
-        res.status(200).json({msg: "Inicio de sesión exitoso", token});
+        //guardar token en la base de datos
+        usuarioExiste.refreshToken = refreshToken;
+        await usuarioExiste.save();
+
+        res.status(200).json({msg: "Inicio de sesión exitoso", tokenAcceso, refreshToken});
 
     }catch(error){
         res.status(500).json({msg: "Hubo un error en el servidor", error});
@@ -75,4 +86,52 @@ const login = async (req, res) => {
     }
 }
 
-module.exports = {registrarUsuario, login};
+//Refresh token 
+const refreshTokenFuncion = async (req, res) => {
+    try{
+
+        const {refreshToken} = req.body;
+        if(!refreshToken){
+            return res.status(401).json({msg: "No hay token, acceso no válido"});
+        }
+
+        //Buscar usuario con el refresh token
+        const usuario = await Usuario.findOne({refreshToken});
+        if(!usuario){
+            return res.status(401).json({msg: "Token no válido"});
+        }
+
+        //verificar el refresh token
+        jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH, (error, decoded) => {
+            if(error){
+                return res.status(403).json({msg: "Token no válido"});
+            }
+
+            //Crear nuevo token de acceso
+            const newtokenAcceso = generarTokenAcceso(usuario._id);
+            res.status(200).json({newtokenAcceso});
+        });
+    }catch(error){
+        res.status(500).json({msg: "Hubo un error en el servidor", error});
+    }
+}
+
+//logout
+
+const logout = async (req, res) => {
+    try{
+        const usuario = await Usuario.findById(req.usuario.usuarioId);
+        if(!usuario){
+            return res.status(401).json({msg: "Usuario no encontrado"});
+        }
+
+        usuario.refreshToken = null;
+        await usuario.save();
+
+        res.status(200).json({msg: "Sesión cerrada correctamente"});
+    }catch(error){
+        res.status(500).json({msg: "Hubo un error en el servidor", error});
+    }
+}
+
+module.exports = {registrarUsuario, login, refreshTokenFuncion, logout};
