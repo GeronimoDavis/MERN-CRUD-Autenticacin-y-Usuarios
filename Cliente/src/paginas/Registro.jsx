@@ -21,14 +21,14 @@ const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje(null);
     try{
-        const {data} = await API.post("/auth/register", form);
+        const {data} = await API.post("/api/auth/register", form);
         console.log(data);
         setMensaje({tipo: "exito", texto: date.msg })
 
         localStorage.setItem("tokenAcceso", date.tokenAcceso);
         localStorage.setItem("refreshToken", date.refreshToken);
 
-        setTimeout(() => navigate("/login"), 1500);
+        navigate("/login"); // Redirigir a la página de inicio de sesión después del registro exitoso
 
     }
     catch(error){
