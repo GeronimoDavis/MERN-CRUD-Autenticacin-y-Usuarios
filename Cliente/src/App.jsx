@@ -5,7 +5,7 @@ import './App.css'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Registro from './paginas/Registro';
 import Login from './paginas/Login';
-import Inicio from './paginas/Inicio';
+import Inicio from './paginas/Inicio'; 
 import Bienvenida from './paginas/Bienvenida';
 
 

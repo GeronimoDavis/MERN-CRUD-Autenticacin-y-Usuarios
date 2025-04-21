@@ -2,6 +2,7 @@ import {useState} from "react";
 import API from "../api/axiosInstance";
 import { useNavigate } from "react-router-dom";
 
+
 const Registro = () => {
     const [form, setForm] = useState({
         nombreUsuario:"",
@@ -23,12 +24,11 @@ const handleSubmit = async (e) => {
     try{
         const {data} = await API.post("/api/auth/register", form);
         console.log(data);
-        setMensaje({tipo: "exito", texto: date.msg })
+        setMensaje({tipo: "exito", texto: data.msg })
 
-        localStorage.setItem("tokenAcceso", date.tokenAcceso);
-        localStorage.setItem("refreshToken", date.refreshToken);
-
-        navigate("/login"); // Redirigir a la página de inicio de sesión después del registro exitoso
+        localStorage.setItem("tokenAcceso", data.tokenAcceso);
+        localStorage.setItem("refreshToken", data.refreshToken);
+        setTimeout(() => navigate("/login"), 1500); //redireccion a la pagina de bienvenida
 
     }
     catch(error){
